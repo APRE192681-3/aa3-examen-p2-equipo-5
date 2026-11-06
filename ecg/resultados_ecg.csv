@@ -1,0 +1,5 @@
+modelo,tipo,parametros,sensibilidad,especificidad,auc,cumple,elegido
+Línea base (clase mayoritaria),linea base,0,0.0,1.0,0.5,False,False
+Conv1D,convolucional,5857,0.9855769230769231,0.9965753424657534,0.9989874209694416,True,True
+TCN causal,convolucional,4785,0.9903846153846154,0.9965753424657534,0.9986622431506849,True,False
+BiGRU(16),recurrente,1857,0.9807692307692307,0.9965753424657534,0.9964189278187565,True,False
