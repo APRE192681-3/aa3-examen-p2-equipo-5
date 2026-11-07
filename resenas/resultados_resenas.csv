@@ -1,0 +1,5 @@
+modelo,tipo,parametros,exhaustividad,precision,exactitud,cumple,elegido
+línea base (siempre negativa),linea base,0,1.0,0.5,0.5,False,False
+A: TF-IDF bigramas + densa,conjunto,1280129,0.92,0.9113,0.9152,True,True
+B1: Embedding + Bi-LSTM,recurrente,1346177,0.935,0.8943,0.9122,True,False
+B2: Embedding + Conv1D,convolucional,1321217,0.9095,0.8983,0.9032,True,False
