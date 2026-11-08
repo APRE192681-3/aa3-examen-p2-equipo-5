@@ -9,9 +9,9 @@ Dos casos de empresas ficticias: **CardioRitmo** (tamizaje de latidos ECG) y **C
 
 | Integrante | Responsabilidad |
 |---|---|
-| Andrea | Problema 1 (ECG): `ecg/DEV_ecg.ipynb`, `resultados_ecg.csv`, `modelo/`, borrador de limitaciones; estructura del repo y README |
+| Andrea | Problema 1 (ECG): `ecg/DEV_ecg.ipynb`, `resultados_ecg.csv`, `modelo/`, borrador de limitaciones; estructura del repo. |
 | Paula | Problema 2 (reseñas): `resenas/DEV_resenas.ipynb`, `resultados_resenas.csv`, `modelo/` |
-| Diana | Folletos en PDF (ambos) y maquetas PMV (`pmv/`) |
+| Diana | Folletos en PDF (ambos), maquetas PMV (`pmv/`) y README actualizado |
 
 ## Modelo elegido
 
@@ -62,8 +62,9 @@ Para usar el modelo de reseñas hay que cargar también `resenas/modelo/preproce
 
 `pmv/ecg.html` y `pmv/resenas.html` son maquetas interactivas de la interfaz. Se abren con doble clic en el navegador, sin instalar nada.
 
-**Importante:** las maquetas todavía usan un clasificador simulado ("Modo demostración") y no cargan los modelos guardados. No son una app web que use `modelo/`, así que no reclamamos el punto extra. El punto de conexión está marcado en el código con `CONEXIÓN: reemplazar por fetch('/predict'...)`.
+**Importante:** las maquetas todavía usan un clasificador simulado ("Modo demostración") y no cargan los modelos guardados.
+Para verlos en la web:
+Reseñas: https://b23c00c2-rese-aradar-triaje-de-quejas.netlify.app 
+ECG: https://6218e957-cardioritmo-tamizaje-ecg.netlify.app 
+Ninguna usa `modelo/`, así que no reclamamos el punto extra, unicamente es para visualización en los folletos
 
-## Modelos grandes
-
-Ningún modelo pesa más de 100 MB (el mayor es `modelo_resenas.keras`, 15.4 MB), así que todos están en el repositorio. No aplica enlace externo.
