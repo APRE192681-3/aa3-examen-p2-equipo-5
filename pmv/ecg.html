@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CardioRitmo Tamizaje — Módulo Holter IA</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --primary: #1E3A5F;
+      --primary-hover: #162C48;
+      --primary-light: #EBF1F8;
+      --bg: #F4F6FA;
+      --surface: #FFFFFF;
+      --surface-subtle: #F9FAFC;
+      --border: #D9DEE8;
+      --border-focus: #1E3A5F;
+      --text: #182230;
+      --text-muted: #5B6475;
+      --accent-purple: #6D4AFF;
+      --accent-purple-light: #F2EEFF;
+      --accent-purple-border: #D5C7FF;
+      --normal-teal: #1E3A5F;
+      --normal-bg: #EBF1F8;
+      --danger-soft: #D32F2F;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .font-mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top Bar */
+    header.top-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 54px;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      background: var(--primary);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      border: 1px solid #D1DFED;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      cursor: help;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+    }
+
+    .btn:hover {
+      background: var(--surface-subtle);
+      border-color: #BAC2D0;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #fff;
+    }
+
+    .btn-alert {
+      border-color: var(--accent-purple-border);
+      background: var(--accent-purple-light);
+      color: var(--accent-purple);
+      font-weight: 600;
+      font-size: 12.5px;
+    }
+
+    .btn-alert:hover {
+      background: #E8E2FF;
+      border-color: var(--accent-purple);
+    }
+
+    /* Main Container */
+    main.app-shell {
+      flex: 1;
+      max-width: 1380px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Grid Layout: Visor + Controls */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 1px 2px rgba(24, 34, 48, 0.03);
+    }
+
+    .card-header {
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-body {
+      padding: 1.15rem;
+    }
+
+    /* Visor ECG */
+    .visor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .input-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .select-input {
+      font-family: inherit;
+      font-size: 12.5px;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .select-input:focus {
+      border-color: var(--primary);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* SVG Canvas Box */
+    .ecg-viewport {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+      overflow: hidden;
+      min-height: 250px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .ecg-viewport svg {
+      width: 100%;
+      height: 250px;
+      display: block;
+    }
+
+    .ecg-grid-line {
+      stroke: #EAEFF5;
+      stroke-width: 0.75;
+    }
+
+    .ecg-grid-major {
+      stroke: #D6DFEB;
+      stroke-width: 1;
+    }
+
+    .ecg-path {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 200ms ease;
+    }
+
+    .ecg-path.anormal {
+      stroke: var(--accent-purple);
+    }
+
+    .animated-trace {
+      stroke-dasharray: 1200;
+      stroke-dashoffset: 1200;
+      animation: drawTrace 450ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes drawTrace {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animated-trace {
+        stroke-dasharray: none;
+        stroke-dashoffset: 0;
+        animation: none;
+      }
+    }
+
+    .ecg-labels {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0.25rem 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Result Panel */
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      height: 100%;
+    }
+
+    .verdict-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+      background: var(--surface-subtle);
+      transition: background-color var(--transition), border-color var(--transition);
+    }
+
+    .verdict-box.normal {
+      background: var(--normal-bg);
+      border-color: #C3D5E8;
+    }
+
+    .verdict-box.anormal {
+      background: var(--accent-purple-light);
+      border-color: var(--accent-purple-border);
+    }
+
+    .verdict-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .verdict-title {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .verdict-box.normal .verdict-title {
+      color: var(--normal-teal);
+    }
+
+    .verdict-box.anormal .verdict-title {
+      color: var(--accent-purple);
+    }
+
+    .verdict-desc {
+      font-size: 12.5px;
+      color: var(--text);
+      margin-top: 0.35rem;
+    }
+
+    /* Probability Bar */
+    .prob-metric {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .prob-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .prob-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .prob-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .prob-track-wrapper {
+      position: relative;
+      height: 18px;
+      padding: 5px 0;
+    }
+
+    .prob-track {
+      width: 100%;
+      height: 8px;
+      background: #E2E7F0;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prob-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 250ms ease, background-color 250ms ease;
+    }
+
+    .prob-fill.over-threshold {
+      background: var(--accent-purple);
+    }
+
+    /* Threshold marker at 50% */
+    .threshold-marker {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #475467;
+      z-index: 2;
+    }
+
+    .threshold-badge {
+      position: absolute;
+      left: 50%;
+      top: -16px;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .prob-scale {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* Beat Meta specs */
+    .beat-meta-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      border-top: 1px solid var(--border);
+      padding-top: 0.85rem;
+      margin-top: auto;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-item span:first-child {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .meta-item span:last-child {
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    /* Review Table Section (Modo Registro) */
+    .table-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .table-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+
+    .table-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .table-banner-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .table-count-highlight {
+      font-weight: 700;
+      color: var(--accent-purple);
+    }
+
+    /* Switch toggle */
+    .switch-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .switch-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-track {
+      width: 34px;
+      height: 18px;
+      background-color: #CBD5E1;
+      border-radius: 9999px;
+      transition: background-color var(--transition);
+      position: relative;
+    }
+
+    .switch-thumb {
+      width: 14px;
+      height: 14px;
+      background-color: #FFFFFF;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .switch-input:checked + .switch-track {
+      background-color: var(--primary);
+    }
+
+    .switch-input:checked + .switch-track .switch-thumb {
+      transform: translateX(16px);
+    }
+
+    .switch-input:focus-visible + .switch-track {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .table-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      max-height: 380px;
+      position: relative;
+    }
+
+    table.review-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+
+    table.review-table th {
+      background: #F8FAFC;
+      padding: 0.65rem 1rem;
+      font-weight: 600;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    table.review-table td {
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid #EDF1F7;
+      vertical-align: middle;
+    }
+
+    table.review-table tr {
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+
+    table.review-table tr:hover {
+      background-color: #F8FAFD;
+    }
+
+    table.review-table tr.selected {
+      background-color: #F1EDFF !important;
+    }
+
+    table.review-table tr:focus-visible {
+      outline: 2px solid var(--primary);
+    }
+
+    .sparkline-svg {
+      width: 90px;
+      height: 24px;
+      display: block;
+    }
+
+    .pill-anormal {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent-purple-light);
+      color: var(--accent-purple);
+      border: 1px solid var(--accent-purple-border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .pill-normal {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--normal-bg);
+      color: var(--normal-teal);
+      border: 1px solid #CAD9E8;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* Accordion "Desempeño y Límites" */
+    details.limits-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+
+    details.limits-panel[open] {
+      border-color: #C0C8D6;
+    }
+
+    summary.limits-summary {
+      padding: 0.85rem 1.15rem;
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      background: var(--surface);
+    }
+
+    summary.limits-summary:focus-visible {
+      outline: 2px solid var(--primary);
+    }
+
+    .summary-chevron {
+      transition: transform var(--transition);
+    }
+
+    details[open] .summary-chevron {
+      transform: rotate(180deg);
+    }
+
+    .limits-content {
+      padding: 1.15rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface-subtle);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.95rem;
+    }
+
+    .metric-card-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-card-stat {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-card-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .warning-box {
+      border: 1px solid #E5C37A;
+      background: #FFFDF5;
+      border-radius: var(--radius-sm);
+      padding: 0.95rem;
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .warning-icon {
+      color: #B45309;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .warning-text h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #92400E;
+      margin-bottom: 0.2rem;
+    }
+
+    .warning-text p {
+      font-size: 12px;
+      color: #78350F;
+      line-height: 1.45;
+    }
+
+    /* Modal de Aviso Importante */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      animation: modalEnter 180ms ease-out;
+    }
+
+    @keyframes modalEnter {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-body {
+      padding: 1.25rem;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      padding: 0.85rem 1.25rem;
+      background: var(--surface-subtle);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Footer */
+    footer.app-footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.85rem 1.5rem;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: auto;
+    }
+
+    .footer-ethical-notice {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    /* Toast Alert for File Parsing */
+    .toast-msg {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 9px 16px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      display: none;
+      z-index: 120;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    }
+  </style>
+</head>
+<body>
+<!-- 1. BARRA SUPERIOR DELGADA -->
+<header class="top-bar" role="banner">
+<div class="brand-section">
+<div aria-hidden="true" class="brand-logo">C</div>
+<span class="brand-title">CardioRitmo Tamizaje</span>
+<span class="brand-badge">Holter 24h • PMV v0.9</span>
+</div>
+<div class="top-meta">
+<div class="status-indicator" title="Se conectará al modelo Conv1D entrenado (5,857 parámetros)">
+<span class="status-dot"></span>
+<span>Modo demostración · clasificador simulado</span>
+</div>
+<button aria-expanded="false" aria-haspopup="dialog" class="btn btn-alert" id="btn-open-notice">
+<svg aria-hidden="true" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="14">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="8" y2="12"></line>
+<line x1="12" x2="12.01" y1="16" y2="16"></line>
+</svg>
+<span>Aviso importante</span>
+</button>
+</div>
+</header>
+<!-- CONTENEDOR PRINCIPAL: MÁXIMO 3 ZONAS -->
+<main class="app-shell" role="main">
+<!-- ZONA 1: VISOR DEL LATIDO + PANEL DE RESULTADO -->
+<section aria-labelledby="visor-heading" class="dashboard-grid">
+<!-- Visor ECG (SVG 140 puntos normalizados z-score) -->
+<article class="card">
+<div class="card-header">
+<h2 class="card-title" id="visor-heading">
+<svg aria-hidden="true" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
+<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+</svg>
+            Visor de Trazo ECG (140 puntos normalizados)
+          </h2>
+<span class="font-mono" id="current-beat-tag" style="font-size: 11.5px; color: var(--text-muted);">
+            Latido normal de ejemplo 1
+          </span>
+</div>
+<div class="card-body">
+<div class="visor-toolbar">
+<div class="input-selector-group">
+<label for="sample-select" style="font-size: 12px; font-weight: 500; color: var(--text-muted);">
+                Muestra:
+              </label>
+<select aria-label="Seleccionar latido de ejemplo" class="select-input" id="sample-select">
+<optgroup label="Latidos Normales">
+<option value="normal-1">Latido normal de ejemplo 1</option>
+<option value="normal-2">Latido normal de ejemplo 2</option>
+<option value="normal-3">Latido normal de ejemplo 3</option>
+</optgroup>
+<optgroup label="Latidos Anormales">
+<option value="anormal-1">Latido anormal de ejemplo 1</option>
+<option value="anormal-2">Latido anormal de ejemplo 2</option>
+<option value="anormal-3">Latido anormal de ejemplo 3</option>
+</optgroup>
+</select>
+<div class="file-input-wrapper">
+<button class="btn btn-primary" id="btn-load-csv-label" type="button">
+<svg aria-hidden="true" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="13">
+<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+<polyline points="17 8 12 3 7 8"></polyline>
+<line x1="12" x2="12" y1="3" y2="15"></line>
+</svg>
+<span>Cargar registro (CSV)</span>
+</button>
+<input accept=".csv,text/csv,text/plain" aria-label="Cargar archivo CSV con latidos de 140 o 141 puntos" id="csv-file-input" type="file"/>
+</div>
+</div>
+</div>
+<!-- Cuadrícula clínica y trazado del latido en SVG -->
+<div class="ecg-viewport" id="ecg-container">
+<svg aria-label="Gráfica vectorial del trazo ECG actual. Evaluando..." id="ecg-svg" preserveaspectratio="none" role="img" viewbox="0 0 700 250">
+<defs>
+<pattern height="10" id="ecgGridSmall" patternunits="userSpaceOnUse" width="10">
+<path class="ecg-grid-line" d="M 10 0 L 0 0 0 10" fill="none"></path>
+</pattern>
+<pattern height="50" id="ecgGridLarge" patternunits="userSpaceOnUse" width="50">
+<rect fill="url(#ecgGridSmall)" height="50" width="50"></rect>
+<path class="ecg-grid-major" d="M 50 0 L 0 0 0 50" fill="none"></path>
+</pattern>
+</defs>
+<!-- Fondo de cuadrícula médica milimetrada -->
+<rect fill="url(#ecgGridLarge)" height="100%" width="100%"></rect>
+<!-- Línea base cero isoelectrica dinámica -->
+<line id="ecg-baseline" stroke="#CAD5E3" stroke-dasharray="3,3" stroke-width="1" x1="0" x2="700" y1="125" y2="125"></line>
+<!-- Trazo SVG dibujado dinámicamente -->
+<path class="ecg-path animated-trace" d="" id="ecg-trace"></path>
+</svg>
+</div>
+<div class="ecg-labels font-mono">
+<span>Punto 0</span>
+<span>Punto 70</span>
+<span>Punto 139</span>
+</div>
+</div>
+</article>
+<!-- Panel de Resultado -->
+<aside aria-labelledby="result-heading" class="card">
+<div class="card-header">
+<h2 class="card-title" id="result-heading">Resultado del Modelo</h2>
+<span class="font-mono" style="font-size: 11px; color: var(--text-muted);">Umbral: 0.50</span>
+</div>
+<div class="card-body">
+<div class="result-container">
+<!-- Veredicto Principal -->
+<div aria-live="polite" class="verdict-box normal" id="verdict-card" role="status">
+<div class="verdict-label">Veredicto IA</div>
+<div class="verdict-title" id="verdict-text">Normal</div>
+<div class="verdict-desc" id="verdict-hint">El trazo no supera el umbral de cribado clínico.</div>
+</div>
+<!-- Probabilidad y Barra Fina -->
+<div class="prob-metric">
+<div class="prob-header">
+<span class="prob-name">P(anormal)</span>
+<span class="prob-value font-mono" id="prob-num">0.082</span>
+</div>
+<div class="prob-track-wrapper">
+<div class="threshold-badge font-mono">Corte: 0.5</div>
+<div class="threshold-marker" title="Umbral de decisión (0.5)"></div>
+<div class="prob-track">
+<div class="prob-fill" id="prob-bar-fill" style="width: 8.2%;"></div>
+</div>
+</div>
+<div class="prob-scale font-mono">
+<span>0.00 (Normal)</span>
+<span>0.50</span>
+<span>1.00 (Anormal)</span>
+</div>
+</div>
+<!-- Metadatos de la Muestra Actual (sin unidades inventadas) -->
+<div class="beat-meta-list font-mono">
+<div class="meta-item">
+<span>Puntos trazo</span>
+<span id="meta-points">140 / 140</span>
+</div>
+<div class="meta-item">
+<span>Identificador</span>
+<span id="meta-id">Latido normal 1</span>
+</div>
+<div class="meta-item">
+<span>Valor máx. (z)</span>
+<span id="meta-peak">+1.24</span>
+</div>
+<div class="meta-item">
+<span>Valor mín. (z)</span>
+<span id="meta-min">-0.85</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</section>
+<!-- ZONA 2: LISTA DE REVISIÓN (MODO REGISTRO) -->
+<section aria-labelledby="review-list-heading" class="table-section">
+<div class="table-banner">
+<div class="table-banner-left">
+<span id="review-list-heading" style="font-weight: 600; color: var(--primary);">Lista de Tamizaje del Registro:</span>
+<span id="table-summary-text" style="color: var(--text-muted); margin-left: 4px;">
+<strong class="table-count-highlight font-mono" id="anormal-count">3</strong> de 
+            <strong class="font-mono" id="total-count">10</strong> latidos marcados para revisión
+          </span>
+</div>
+<div class="table-banner-right">
+<!-- Toggle ver todos los latidos -->
+<label class="switch-label">
+<input aria-controls="beats-table-body" class="switch-input" id="toggle-all-beats" type="checkbox"/>
+<span class="switch-track">
+<span class="switch-thumb"></span>
+</span>
+<span>Ver todos los latidos</span>
+</label>
+</div>
+</div>
+<div class="table-wrapper">
+<table aria-label="Tabla de latidos del registro Holter" class="review-table">
+<thead>
+<tr>
+<th aria-sort="none" scope="col" style="width: 110px;">N° Latido</th>
+<th aria-sort="descending" scope="col" style="width: 140px;">P(anormal)</th>
+<th aria-sort="none" scope="col" style="width: 160px;">Clasificación</th>
+<th aria-sort="none" scope="col" style="width: 120px;">Miniatura</th>
+<th aria-sort="none" scope="col">Nota de tamizaje</th>
+</tr>
+</thead>
+<tbody id="beats-table-body">
+<!-- Rellenado dinámicamente -->
+</tbody>
+</table>
+</div>
+</section>
+<!-- ZONA 3: PANEL PLEGABLE "DESEMPEÑO Y LÍMITES" -->
+<section aria-labelledby="limits-heading">
+<details class="limits-panel" open="">
+<summary class="limits-summary" id="limits-heading">
+<span>Desempeño medido y límites críticos del modelo</span>
+<svg aria-hidden="true" class="summary-chevron" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</summary>
+<div class="limits-content">
+<div class="metric-card">
+<div class="metric-card-title">Sensibilidad medida en prueba (1,000 latidos)</div>
+<div class="metric-card-stat font-mono">98.6 de cada 100</div>
+<div class="metric-card-desc">
+              98.6 de cada 100 anormales se marcan (6 se le escaparon de 416).
+            </div>
+</div>
+<div class="metric-card">
+<div class="metric-card-title">Especificidad medida en prueba (1,000 latidos)</div>
+<div class="metric-card-stat font-mono">99.7 de cada 100</div>
+<div class="metric-card-desc">
+              99.7 de cada 100 normales pasan sin marcar.<br/>
+              Solo 0.3 de cada 100 normales se marcan como sospechosos (2 de 584).
+            </div>
+</div>
+<div class="metric-card">
+<div class="metric-card-title">Huella y peso del modelo</div>
+<div class="metric-card-stat font-mono">5,857 params Conv1D (&lt;20,000)</div>
+<div class="metric-card-desc">
+              Dentro del límite exigido por el hardware del cliente (&lt; 20,000 parámetros para ejecución integrada en Holter).
+            </div>
+</div>
+<!-- Limitación Crítica Exigida -->
+<div class="warning-box" role="note">
+<div aria-hidden="true" class="warning-icon">⚠</div>
+<div class="warning-text">
+<h4>Limitación crítica de validación clínica</h4>
+<p>
+                Todos los datos de entrenamiento y prueba provienen de <strong>UN solo paciente con insuficiencia cardiaca</strong>. 
+                Se desconoce su comportamiento y tasa de error en otros pacientes o patologías distintas. En la prueba de 1,000 latidos 
+                <strong>falló en 6 latidos anormales</strong> (no fueron marcados; falsos negativos) y en <strong>2 latidos normales</strong> 
+                (marcados como sospechosos; falsos positivos).
+              </p>
+</div>
+</div>
+</div>
+</details>
+</section>
+</main>
+<!-- MODAL DE AVISO IMPORTANTE ÉTICO / TÉCNICO -->
+<div aria-labelledby="modal-title" aria-modal="true" class="modal-overlay" id="notice-modal" role="dialog">
+<div class="modal-dialog">
+<div class="modal-header">
+<h3 class="modal-title" id="modal-title">Aviso de Responsabilidad Clínica</h3>
+<button aria-label="Cerrar ventana modal" class="btn" id="btn-close-modal" style="padding: 4px 8px;">✕</button>
+</div>
+<div class="modal-body">
+<p><strong>Herramienta de apoyo al tamizaje; no sustituye el diagnóstico del cardiólogo.</strong></p>
+<p>
+          Este software ha sido concebido exclusivamente como filtro preliminar de cribado para acelerar la 
+          revisión de registros Holter de 24 horas (&gt;100,000 latidos), destacando aquellos eventos con mayor 
+          probabilidad de morfolología anormal.
+        </p>
+<div style="background: var(--surface-subtle); border-left: 3px solid var(--accent-purple); padding: 0.65rem 0.85rem; font-size: 12.5px;">
+<strong>Validación monocéntrica:</strong> El modelo actual fue entrenado y validado únicamente con datos 
+          de un único paciente con insuficiencia cardiaca. Requiere validación multicéntrica antes de su empleo diagnóstico.
+        </div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-primary" id="btn-accept-modal">Comprendido</button>
+</div>
+</div>
+</div>
+<!-- AVISO ÉTICO EN PIE DE PÁGINA (Visible pero discreto) -->
+<footer class="app-footer" role="contentinfo">
+<div class="footer-ethical-notice">
+<svg aria-hidden="true" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+<span>Herramienta de apoyo al tamizaje; no sustituye el diagnóstico del cardiólogo.</span>
+</div>
+<div class="font-mono" style="font-size: 11px;">
+      CardioRitmo • prototipo
+    </div>
+</footer>
+<!-- Toast Notificaciones -->
+<div aria-live="polite" class="toast-msg" id="toast" role="status"></div>
+<!-- LÓGICA E INTERACTIVIDAD JS PURA -->
+<script>
+    /* ==========================================================================
+       1. GENERADOR DE LATIDOS SINTÉTICOS DE 140 PUNTOS (ESTANDARIZACIÓN Z)
+          Formas matemáticas sin diagnósticos clínicos inventados.
+       ========================================================================== */
+    function generateSyntheticECG(isAnormal, type = 1) {
+      const points = [];
+      const N = 140;
+
+      for (let i = 0; i < N; i++) {
+        let val = 0;
+
+        if (!isAnormal) {
+          // ONDAS REGULARES Y SUAVES (Valores z centrados en rangos moderados [-1.2 a +1.8])
+          if (type === 1) {
+            val += 0.25 * Math.sin((i / N) * 2 * Math.PI);
+            val += 1.45 * Math.exp(-Math.pow((i - 68) / 7, 2));
+            val -= 0.35 * Math.exp(-Math.pow((i - 80) / 6, 2));
+            val += 0.40 * Math.exp(-Math.pow((i - 110) / 14, 2));
+          } else if (type === 2) {
+            val += 0.30 * Math.exp(-Math.pow((i - 30) / 9, 2));
+            val += 1.65 * Math.exp(-Math.pow((i - 66) / 8, 2));
+            val -= 0.40 * Math.exp(-Math.pow((i - 78) / 7, 2));
+            val += 0.50 * Math.exp(-Math.pow((i - 108) / 16, 2));
+          } else {
+            val += 0.18 * Math.sin((i / 15));
+            val += 1.35 * Math.exp(-Math.pow((i - 70) / 6.5, 2));
+            val -= 0.25 * Math.exp(-Math.pow((i - 84) / 7.5, 2));
+            val += 0.35 * Math.exp(-Math.pow((i - 115) / 13, 2));
+          }
+          // Pequeña oscilación suave
+          val += 0.03 * Math.sin(i * 0.45);
+        } else {
+          // ONDAS ANORMALES: Formas asimétricas, amplias, con rangos z amplios (e.g. -5.2 a +4.8)
+          if (type === 1) {
+            val += 4.20 * Math.exp(-Math.pow((i - 58) / 18, 2));
+            val -= 3.80 * Math.exp(-Math.pow((i - 88) / 16, 2));
+            val += 1.20 * Math.sin((i / 20) * Math.PI);
+          } else if (type === 2) {
+            val -= 4.60 * Math.exp(-Math.pow((i - 52) / 14, 2));
+            val += 3.70 * Math.exp(-Math.pow((i - 82) / 22, 2));
+            val -= 1.80 * Math.exp(-Math.pow((i - 118) / 15, 2));
+          } else {
+            val += 3.10 * Math.sin((i / 22) * Math.PI);
+            val -= 4.90 * Math.exp(-Math.pow((i - 72) / 17, 2));
+            val += 2.40 * Math.exp(-Math.pow((i - 104) / 19, 2));
+          }
+          val += 0.08 * Math.cos(i * 0.6);
+        }
+
+        points.push(parseFloat(val.toFixed(3)));
+      }
+      return points;
+    }
+
+    // Base de datos de ejemplos con nombres neutros
+    const SAMPLE_DATABASE = {
+      'normal-1': { id: 'Latido normal 1', name: 'Latido normal de ejemplo 1', data: generateSyntheticECG(false, 1) },
+      'normal-2': { id: 'Latido normal 2', name: 'Latido normal de ejemplo 2', data: generateSyntheticECG(false, 2) },
+      'normal-3': { id: 'Latido normal 3', name: 'Latido normal de ejemplo 3', data: generateSyntheticECG(false, 3) },
+      'anormal-1': { id: 'Latido anormal 1', name: 'Latido anormal de ejemplo 1', data: generateSyntheticECG(true, 1) },
+      'anormal-2': { id: 'Latido anormal 2', name: 'Latido anormal de ejemplo 2', data: generateSyntheticECG(true, 2) },
+      'anormal-3': { id: 'Latido anormal de ejemplo 3', name: 'Latido anormal de ejemplo 3', data: generateSyntheticECG(true, 3) },
+    };
+
+    // Registro simulado inicial de 10 latidos
+    let holterRecord = [
+      { beatNumber: 101, sampleKey: 'normal-1' },
+      { beatNumber: 102, sampleKey: 'anormal-1' },
+      { beatNumber: 103, sampleKey: 'normal-2' },
+      { beatNumber: 104, sampleKey: 'normal-3' },
+      { beatNumber: 105, sampleKey: 'anormal-2' },
+      { beatNumber: 106, sampleKey: 'normal-1' },
+      { beatNumber: 107, sampleKey: 'normal-2' },
+      { beatNumber: 108, sampleKey: 'anormal-3' },
+      { beatNumber: 109, sampleKey: 'normal-3' },
+      { beatNumber: 110, sampleKey: 'normal-1' }
+    ];
+
+    let currentSelectedId = 'Latido normal 1';
+    let currentBeatData = SAMPLE_DATABASE['normal-1'].data;
+    let evaluatedRecordStore = []; // Almacén clasificado en memoria
+
+    /* ==========================================================================
+       2. CONEXIÓN ASYNC AL MODELO
+       ========================================================================== */
+    /**
+     * CONEXIÓN: reemplazar por fetch('/predict', ...). El servidor aplica (x − mu) / sigma con mu y sigma de entrenamiento y forma (n,140,1).
+     */
+    async function clasificar(beat140) {
+      if (!Array.isArray(beat140) || beat140.length !== 140) {
+        throw new Error("Formato inválido: el vector debe contener exactamente 140 valores.");
+      }
+
+      // Simulación de inferencia asíncrona no bloqueante
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Evaluación cuantitativa de dispersión y amplitud z
+          let maxVal = Math.max(...beat140);
+          let minVal = Math.min(...beat140);
+          let range = maxVal - minVal;
+
+          let variance = 0;
+          for (let i = 0; i < 140; i++) {
+            variance += Math.abs(beat140[i]);
+          }
+          variance = variance / 140;
+
+          // Si el rango z excede umbrales típicos o la variabilidad es amplia -> P >= 0.50
+          let score = (range * 0.45) + (variance * 0.55);
+          let p = 1 / (1 + Math.exp(-(score - 2.1) * 2.8));
+
+          // Delimitar garantizando P < 0.5 para normales y P >= 0.5 para anormales
+          if (range > 3.5 || minVal < -2.2) {
+            p = Math.max(p, 0.72);
+          } else {
+            p = Math.min(p, 0.38);
+          }
+
+          p = Math.min(Math.max(p, 0.024), 0.988);
+          resolve(parseFloat(p.toFixed(3)));
+        }, 12);
+      });
+    }
+
+    async function clasificarLote(latidos) {
+      const promesas = latidos.map(b => clasificar(b));
+      return await Promise.all(promesas);
+    }
+
+    /* ==========================================================================
+       3. RENDERIZADO VISUAL SVG CON AUTOESCALADO DINÁMICO
+       ========================================================================== */
+    function renderEcgSvg(dataPoints, isAnormal, prob, idLabel) {
+      const svgPath = document.getElementById('ecg-trace');
+      const baselineLine = document.getElementById('ecg-baseline');
+      const svgElement = document.getElementById('ecg-svg');
+
+      const width = 700;
+      const height = 250;
+      const padY = 18; // Margen superior e inferior para evitar cortes
+
+      // Autoescalar dinámicamente según min y max del latido activo (con margen ~15%)
+      let minVal = Math.min(...dataPoints);
+      let maxVal = Math.max(...dataPoints);
+      let span = maxVal - minVal;
+      if (span < 0.001) span = 1;
+
+      const margin = span * 0.15;
+      const effectiveMin = minVal - margin;
+      const effectiveMax = maxVal + margin;
+      const effectiveSpan = effectiveMax - effectiveMin;
+
+      // Mapear punto z a coordenada vertical Y de SVG (0 es arriba, 250 es abajo)
+      const getY = (val) => {
+        const norm = (val - effectiveMin) / effectiveSpan; // 0..1
+        return (height - padY) - (norm * (height - 2 * padY));
+      };
+
+      // Posicionar línea base de cero
+      const zeroY = Math.max(padY, Math.min(height - padY, getY(0)));
+      baselineLine.setAttribute('y1', zeroY.toFixed(1));
+      baselineLine.setAttribute('y2', zeroY.toFixed(1));
+
+      // Construir trazado
+      let d = "";
+      for (let i = 0; i < dataPoints.length; i++) {
+        const x = (i / (dataPoints.length - 1)) * width;
+        const y = getY(dataPoints[i]);
+        if (i === 0) {
+          d += `M ${x.toFixed(1)} ${y.toFixed(1)}`;
+        } else {
+          d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+      }
+
+      svgPath.classList.remove('animated-trace');
+      void svgPath.offsetWidth; // Reflow para reiniciar animación
+      svgPath.classList.add('animated-trace');
+      svgPath.setAttribute('d', d);
+
+      if (isAnormal) {
+        svgPath.classList.add('anormal');
+      } else {
+        svgPath.classList.remove('anormal');
+      }
+
+      // Accesibilidad: aria-label dinámico descriptivo
+      const veredictoStr = isAnormal ? "Anormal (marcado para revisión)" : "Normal (sin hallazgos)";
+      svgElement.setAttribute('aria-label', `Gráfica vectorial del trazo ECG para ${idLabel}. Clasificación: ${veredictoStr}, P(anormal): ${prob.toFixed(3)}. Rango z de ${minVal.toFixed(2)} a +${maxVal.toFixed(2)}.`);
+    }
+
+    // Miniatura para filas de la tabla
+    function generateMiniSvgPath(dataPoints) {
+      const w = 90;
+      const h = 24;
+      const pad = 3;
+      let minVal = Math.min(...dataPoints);
+      let maxVal = Math.max(...dataPoints);
+      let span = maxVal - minVal;
+      if (span < 0.001) span = 1;
+
+      let d = "";
+      for (let i = 0; i < dataPoints.length; i += 2) {
+        const x = (i / (dataPoints.length - 1)) * w;
+        const norm = (dataPoints[i] - minVal) / span;
+        const y = (h - pad) - (norm * (h - 2 * pad));
+        d += (i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(1)}` : ` L ${x.toFixed(1)} ${y.toFixed(1)}`);
+      }
+      return d;
+    }
+
+    /* ==========================================================================
+       4. EVALUACIÓN Y DESPLIEGUE EN INTERFAZ
+       ========================================================================== */
+    async function evaluateAndDisplay(dataPoints, labelId, displayName) {
+      try {
+        const prob = await clasificar(dataPoints);
+        const isAnormal = prob >= 0.5;
+
+        // Gráfica
+        renderEcgSvg(dataPoints, isAnormal, prob, labelId);
+
+        // Panel lateral
+        const verdictBox = document.getElementById('verdict-card');
+        const verdictTitle = document.getElementById('verdict-text');
+        const verdictHint = document.getElementById('verdict-hint');
+        const probNum = document.getElementById('prob-num');
+        const probBar = document.getElementById('prob-bar-fill');
+
+        probNum.textContent = prob.toFixed(3);
+        const percent = Math.min(Math.max(prob * 100, 2), 100);
+        probBar.style.width = percent + '%';
+
+        if (isAnormal) {
+          verdictBox.className = 'verdict-box anormal';
+          verdictTitle.textContent = 'ANORMAL: revisar';
+          verdictHint.textContent = 'Probabilidad ≥ 0.50. Requiere confirmación por el cardiólogo.';
+          probBar.classList.add('over-threshold');
+        } else {
+          verdictBox.className = 'verdict-box normal';
+          verdictTitle.textContent = 'Normal';
+          verdictHint.textContent = 'Probabilidad < 0.50. Trazo dentro del rango de no-intervención.';
+          probBar.classList.remove('over-threshold');
+        }
+
+        // Metadatos
+        document.getElementById('current-beat-tag').textContent = `${displayName || labelId}`;
+        document.getElementById('meta-id').textContent = labelId;
+
+        const maxVal = Math.max(...dataPoints);
+        const minVal = Math.min(...dataPoints);
+        const fmtSign = (n) => (n >= 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
+        document.getElementById('meta-peak').textContent = fmtSign(maxVal);
+        document.getElementById('meta-min').textContent = fmtSign(minVal);
+
+        currentSelectedId = labelId;
+        currentBeatData = dataPoints;
+
+        // Sincronizar select si coincide
+        const select = document.getElementById('sample-select');
+        for (let opt of select.options) {
+          if (SAMPLE_DATABASE[opt.value] && SAMPLE_DATABASE[opt.value].id === labelId) {
+            select.value = opt.value;
+            break;
+          }
+        }
+
+        // Sincronizar resaltado de tabla
+        highlightTableRow(labelId);
+
+      } catch (err) {
+        showToast("Error en inferencia: " + err.message);
+      }
+    }
+
+    function highlightTableRow(id) {
+      document.querySelectorAll('#beats-table-body tr').forEach(tr => {
+        if (tr.dataset.beatId === id) {
+          tr.classList.add('selected');
+        } else {
+          tr.classList.remove('selected');
+        }
+      });
+    }
+
+    /* ==========================================================================
+       5. GESTIÓN Y POBLADO DE LA TABLA DE REVISIÓN
+       ========================================================================== */
+    async function updateReviewData() {
+      // Evaluar lote completo con async/await
+      const batches = holterRecord.map(item => SAMPLE_DATABASE[item.sampleKey].data);
+      const probs = await clasificarLote(batches);
+
+      evaluatedRecordStore = holterRecord.map((item, index) => {
+        const sample = SAMPLE_DATABASE[item.sampleKey];
+        const prob = probs[index];
+        const isAnormal = prob >= 0.5;
+        const displayId = typeof item.beatNumber === 'number' ? `#${item.beatNumber}` : sample.id;
+        return {
+          ...item,
+          prob,
+          isAnormal,
+          sample,
+          displayId,
+          note: isAnormal ? 'Marcado para revisión' : 'Sin hallazgos'
+        };
+      });
+
+      // Ordenar descendentemente por P(anormal)
+      evaluatedRecordStore.sort((a, b) => b.prob - a.prob);
+
+      // Renderizar filas según el estado del switch
+      renderReviewTableRows();
+    }
+
+    function renderReviewTableRows() {
+      const showAll = document.getElementById('toggle-all-beats').checked;
+      const tbody = document.getElementById('beats-table-body');
+      tbody.innerHTML = '';
+
+      const anormalTotal = evaluatedRecordStore.filter(r => r.isAnormal).length;
+      document.getElementById('anormal-count').textContent = anormalTotal;
+      document.getElementById('total-count').textContent = evaluatedRecordStore.length;
+
+      // Filtrar: Por defecto SOLO marcados (isAnormal === true)
+      const rowsToShow = showAll 
+        ? evaluatedRecordStore 
+        : evaluatedRecordStore.filter(r => r.isAnormal);
+
+      if (rowsToShow.length === 0) {
+        const trEmpty = document.createElement('tr');
+        trEmpty.innerHTML = `
+          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+            No hay latidos marcados para revisión en este registro. Activa "Ver todos los latidos" para inspeccionar la totalidad.
+          </td>
+        `;
+        tbody.appendChild(trEmpty);
+        return;
+      }
+
+      rowsToShow.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.tabIndex = 0;
+        tr.dataset.beatId = row.displayId;
+        tr.setAttribute('role', 'button');
+        tr.setAttribute('aria-label', `Latido ${row.displayId}, probabilidad ${row.prob}, ${row.isAnormal ? 'Marcado para revisión' : 'Sin hallazgos'}`);
+
+        if (row.displayId === currentSelectedId || row.sample.id === currentSelectedId) {
+          tr.classList.add('selected');
+        }
+
+        const miniPath = generateMiniSvgPath(row.sample.data);
+        const strokeColor = row.isAnormal ? '#6D4AFF' : '#1E3A5F';
+
+        tr.innerHTML = `
+          <td class="font-mono" style="font-weight: 600;">${row.displayId}</td>
+          <td class="font-mono" style="font-weight: 700; color: ${row.isAnormal ? 'var(--accent-purple)' : 'inherit'};">
+            ${row.prob.toFixed(3)}
+          </td>
+          <td>
+            ${row.isAnormal 
+              ? `<span class="pill-anormal">&#9888; ANORMAL: revisar</span>` 
+              : `<span class="pill-normal">&#10003; Normal</span>`}
+          </td>
+          <td>
+            <svg class="sparkline-svg" viewBox="0 0 90 24" preserveAspectRatio="none" aria-hidden="true">
+              <path d="${miniPath}" fill="none" stroke="${strokeColor}" stroke-width="1.6" />
+            </svg>
+          </td>
+          <td style="color: var(--text-muted); font-size: 12px;">${row.note}</td>
+        `;
+
+        const selectThis = () => {
+          document.querySelectorAll('#beats-table-body tr').forEach(el => el.classList.remove('selected'));
+          tr.classList.add('selected');
+          evaluateAndDisplay(row.sample.data, row.displayId, `Latido ${row.displayId}`);
+        };
+
+        tr.addEventListener('click', selectThis);
+        tr.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectThis();
+          }
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ==========================================================================
+       6. PARSEO DE ARCHIVOS CSV ROBUSTO (140 o 141 columnas, máx 500 filas)
+       ========================================================================== */
+    async function handleCsvUpload(file, inputElement) {
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        try {
+          const text = e.target.result;
+          const rawLines = text.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
+
+          if (rawLines.length === 0) {
+            showToast("El archivo CSV está vacío.");
+            return;
+          }
+
+          let newRecords = [];
+          let errorCount = 0;
+          let ignoredHeader = false;
+
+          for (let index = 0; index < rawLines.length; index++) {
+            const line = rawLines[index].trim();
+            const rawTokens = line.split(/[,;\t]/).map(s => s.trim()).filter(s => s.length > 0);
+
+            // Verificar si es encabezado no numérico
+            if (index === 0) {
+              const nonNumCount = rawTokens.filter(t => isNaN(parseFloat(t))).length;
+              if (nonNumCount > 5) {
+                ignoredHeader = true;
+                continue; // Saltar encabezado
+              }
+            }
+
+            let nums = rawTokens.map(s => parseFloat(s)).filter(n => !isNaN(n));
+
+            // Aceptar 140 valores o 141 (descartando la etiqueta de clase final)
+            if (nums.length === 141) {
+              nums = nums.slice(0, 140);
+            }
+
+            if (nums.length === 140) {
+              const beatNumber = 201 + newRecords.length;
+              const sampleKey = `csv-beat-${newRecords.length}`;
+              
+              SAMPLE_DATABASE[sampleKey] = {
+                id: `#${beatNumber}`,
+                name: `CSV Registro #${beatNumber}`,
+                data: nums
+              };
+
+              newRecords.push({
+                beatNumber: beatNumber,
+                sampleKey: sampleKey
+              });
+
+              // Límite de 500 filas de latidos
+              if (newRecords.length >= 500) {
+                break;
+              }
+            } else {
+              errorCount++;
+            }
+          }
+
+          if (newRecords.length === 0) {
+            showToast("Error de formato: No se encontraron filas válidas de 140 o 141 valores numéricos.");
+            return;
+          }
+
+          holterRecord = newRecords;
+          await updateReviewData();
+
+          // Seleccionar primer latido
+          const firstItem = evaluatedRecordStore[0];
+          await evaluateAndDisplay(firstItem.sample.data, firstItem.displayId, `Latido ${firstItem.displayId}`);
+
+          let msg = `Cargados ${newRecords.length} latidos correctamente.`;
+          if (rawLines.length > 500) {
+            msg += ` Se procesaron únicamente las primeras 500 filas del archivo.`;
+          }
+          if (ignoredHeader) {
+            msg += ` (Fila de encabezado detectada y omitida).`;
+          }
+          showToast(msg);
+
+        } catch (err) {
+          showToast("Error al leer archivo CSV: " + err.message);
+        } finally {
+          // Limpiar input para permitir recargar el mismo archivo si es necesario
+          if (inputElement) {
+            inputElement.value = '';
+          }
+        }
+      };
+
+      reader.onerror = () => {
+        showToast("Error al leer el archivo del disco.");
+        if (inputElement) inputElement.value = '';
+      };
+
+      reader.readAsText(file);
+    }
+
+    /* ==========================================================================
+       7. MENSAJES TOAST Y MODAL CON FOCUS TRAP ACCESIBLE
+       ========================================================================== */
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 4500);
+    }
+
+    const modal = document.getElementById('notice-modal');
+    const openNoticeBtn = document.getElementById('btn-open-notice');
+    const closeNoticeBtn = document.getElementById('btn-close-modal');
+    const acceptNoticeBtn = document.getElementById('btn-accept-modal');
+
+    function openModal() {
+      modal.classList.add('active');
+      openNoticeBtn.setAttribute('aria-expanded', 'true');
+      closeNoticeBtn.focus();
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      openNoticeBtn.setAttribute('aria-expanded', 'false');
+      openNoticeBtn.focus();
+    }
+
+    openNoticeBtn.addEventListener('click', openModal);
+    closeNoticeBtn.addEventListener('click', closeModal);
+    acceptNoticeBtn.addEventListener('click', closeModal);
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Focus Trap dentro del modal
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    });
+
+    /* ==========================================================================
+       8. INICIALIZACIÓN
+       ========================================================================== */
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Toggle "Ver todos los latidos"
+      const toggleAll = document.getElementById('toggle-all-beats');
+      toggleAll.addEventListener('change', () => {
+        renderReviewTableRows();
+      });
+
+      // Selector de muestras
+      const selectSample = document.getElementById('sample-select');
+      selectSample.addEventListener('change', async (e) => {
+        const key = e.target.value;
+        const item = SAMPLE_DATABASE[key];
+        if (item) {
+          await evaluateAndDisplay(item.data, item.id, item.name);
+        }
+      });
+
+      // Carga CSV
+      const csvInput = document.getElementById('csv-file-input');
+      const csvBtn = document.getElementById('btn-load-csv-label');
+      csvBtn.addEventListener('click', () => csvInput.click());
+      
+      csvInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleCsvUpload(e.target.files[0], csvInput);
+        }
+      });
+
+      // Cargar lote inicial y proyectar el primer ejemplo
+      await updateReviewData();
+
+      // Proyectar latido normal de ejemplo 1 inicialmente sincronizado
+      const initial = SAMPLE_DATABASE['normal-1'];
+      await evaluateAndDisplay(initial.data, initial.id, initial.name);
+    });
+  </script>
+</body></html>
